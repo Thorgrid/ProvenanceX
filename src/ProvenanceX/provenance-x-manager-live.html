@@ -1,0 +1,946 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Provenance X Manager</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<style type="text/css">
+		td, th {
+			border: 1px solid black;
+			padding: 5px;
+		}
+
+		table {
+			border-collapse: collapse;
+		}
+		.btn {
+			margin-top:1em;
+			margin-right:1em;
+		}
+        .modal.small {
+            width:33%;
+        }
+        .modal.tiny {
+            width:22%;
+        }
+        @media (max-width: 50em) {
+            .modal.small {
+                width:66%;
+            }
+            .modal.tiny {
+                width:44%;
+            }
+        }
+        @media print {
+            #serverInfo, #serverCheck, #codesAvailableContainer, #myAccountId,
+            #saveAsTemplateModalId, #templateModalId, #createProvenanceCode, #myaccount, #createContainer, #createProvenanceCodeId,
+            #transMemoFieldId, #transMemoId, #saveCodeDetailsId, #printCodeDetailsId, .hiddendiv
+            {
+                display:none;
+                visibility:hidden;
+            }
+
+            #titlebar {
+                width:50%;
+            }
+
+            #logoImage {
+                width:50%;
+                height:50%;
+            }
+
+            #provenanceMemoId {
+                font-size:1em;
+            }
+        }
+	</style>
+	<!--Import Google Icon Font-->
+	<link href="fonts/material-icons.css" rel="stylesheet">
+	<!--Import materialize.css-->
+	<link type="text/css" rel="stylesheet" href="css/materialize.min.css" media="screen,projection" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+	<script type="text/javascript" src="scripts/angular.min.js"></script>
+	<script type="text/javascript" src="scripts/jquery-3.3.1.min.js"></script>
+	<script type="text/javascript" src="scripts/materialize.min.js"></script>
+    <script type="text/javascript" src="scripts/jszip.min.js"></script>
+    <script type="text/javascript" src="scripts/FileSaver.min.js"></script>
+    <script type="text/javascript" src="scripts/JsBarcode.code128.min.js"></script>
+</head>
+<body ng-app="provenancex" style="visibility:hidden;background-color:palevioletred">
+	<div id="serverInfo" class="card-panel hide-on-med-and-down hide" style="position:fixed;left:3px;top:-1px;max-width:14.5%;z-index:3000;word-wrap:break-word;word-break:break-all;">
+
+	</div>
+	<div id="serverCheck" class="container center hide">
+		<div class="card-panel">
+			<div class="switch large-text">
+				<label style="font-size:1.25em">
+					Testing
+					<input id="chkLive" checked type="checkbox" />
+					<span class="lever"></span>
+					Live
+				</label>
+			</div>
+		</div>
+	</div>
+
+    <!--logo and title-->
+	<div id="titlebar" class="container">
+		<div class="card-panel">
+			<div class="company large-text">
+				<div class="row valign-wrapper">
+					<div class="col s3 l2">
+                        <a href="provenance-x.html">
+                            <img id="logoImage" src="images/ProvenanceXLogo.png" alt="" class="responsive-img" />
+                        </a>
+                    </div>
+					<div class="col s9 s10">
+						<h1 style="margin-bottom:0;">Provenance X</h1><br />
+						<h3 style="margin-top:0;">Online Manager (<span id="testLiveText">Test</span> Network)</h3>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+    <!--codes available-->
+	<div id="codesAvailableContainer" class="container center">
+		<div class="card-panel">
+			<div class="row">
+				<div class="col s4 l8 right-align" style="font-size:2em;">
+					<div id="codesAvailable"><span id="titleCodeCount">Codes available</span>
+                    </div>
+				</div>
+                <div class="col s6 l3 left-align">
+                    <span id="codeCount" style="font-size:2em;">-</span>
+                    <div id="codeCountPreloaderId" class="preloader-wrapper small active">
+                        <div class="spinner-layer spinner-green-only">
+                            <div class="circle-clipper left">
+                                <div class="circle"></div>
+                            </div><div class="gap-patch">
+                                <div class="circle"></div>
+                            </div><div class="circle-clipper right">
+                                <div class="circle"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+				<div class="col s2 l1 left-align">
+					<a class="btn-floating btn-large waves-effect waves-light tooltipped" data-position="left" data-tooltip="settings" href="#myaccount"><i class="material-icons">settings</i>&nbsp;</a>
+				</div>
+			</div>
+		</div>
+	</div>
+
+    <!--create code-->
+    <div id="createProvenanceCode"></div>
+	<div id="createContainer" class="container center">
+		<div id="createProvenanceCodeId" class="card-panel">
+			<h3>Create Provenance Code</h3>
+			<div id="bytesAvailable" class="right"><span id="titleByteCount" style="margin-right:1em;">Bytes available</span><span id="byteCount">1000</span></div>
+			<div id="transMemoFieldId" class="input-field">
+				<textarea id="transMemoId" type="text" cols="40" rows="8" class="active materialize-textarea" maxlength="1000"></textarea>
+				<label for="transMemoId">Description</label>
+			</div>
+			<div class="left-align">
+				<input id="createCodeId" class="btn" type="button" value="create provenance code" />
+				<button id="saveAsTemplateId" class="btn modal-trigger" data-target="saveAsTemplateModalId">save description as template</button>
+				<button id="showTemplatesId" class="btn modal-trigger" data-target="templateModalId" onclick="document.location.href = '#createProvenanceCode'">show templates</button>
+			</div>
+		</div>
+	</div>
+    
+	<!--status-->
+	<div id="statusBoxId" class="container center">
+		<div class="card-panel">
+            <div class="row">
+                <div class="col s12">
+                    <h4>Provenance Code #</h4>
+                    <span>
+                        <button id="saveCodeDetailsId" class="btn"><i class="material-icons" style="font-size:2em">save</i></button>
+                        <button id="printCodeDetailsId" class="btn"><i class="material-icons" style="font-size:2em">print</i></button>
+                    </span>
+                    <div id="provenanceCodeId" style="word-break:break-all;width:100%;padding-top:1em;"></div>
+                </div>
+                <div class="col s12 l6">
+                    <h4>QR Code</h4>
+                    <div id="provenanceQRCodeId"><img id="qrcodeImage" class="responsive-img materialboxed" style="display:block;margin-left:auto;margin-right:auto;width:50%;" width="250" height="250" /></div>
+                    <h4>CODE128 Barcode</h4>
+                    <div id="provenanceBarcodeId"><img id="barcode" class="responsive-img materialboxed" style="width:100%;height:100%;page-break-inside:avoid" /></div>
+                </div>
+                <div class="col s12 l6">
+                    <h4>Provenance Description</h4>
+                    <div id="provenanceMemoId" class="left-align" style="word-break:break-all;"></div>
+                </div>
+            </div>
+		</div>
+	</div>
+
+	<!--my account-->
+	<div id="myAccountId" class="container center">
+		<div class="card-panel">
+			<h3>My Account</h3>
+			<div id="newAccountBoxId">
+				<input id="createAccountId" class="btn" type="button" value="create new account" />
+				<h4>or enter existing account below</h4>
+			</div>
+			<div class="row" style="margin:0px;" >
+				<div class="col s9 l10">
+					<div class="input-field">
+						<input id="accountKeyId" type="text" class="active" maxlength="64" />
+						<label for="accountKeyId">Account Key</label>
+					</div>
+				</div>
+			</div>
+			<div class="row" style="margin:0px;">
+				<div class="col s9 l10">
+					<div class="input-field">
+						<input id="accountSecretId" type="password" class="active" maxlength="64" />
+						<label for="accountSecretId">Account Secret</label>
+                        <div>(stored on your local computer and should never be shared - make sure to backup your account and settings)</div>
+					</div>
+                    
+				</div>
+				<div class="col s3 l2 left-align">
+					<input id="showAccountSecretId" class="btn" type="button" value="show" />
+				</div>
+			</div>
+			<div class="left-align">
+                <input id="saveAccountChangesId" class="btn" type="button" value="save account changes" />
+				<input id="backupAccountId" class="btn" type="button" value="backup account and settings" />
+			</div>
+		</div>
+	</div>
+
+	<div id="myaccount"></div>
+
+	<!--save as template modal-->
+	<div id="saveAsTemplateModalId" class="modal modal-fixed-footer small" style="height:15em;">
+		<div class="modal-content" style="height:15em;">
+			<div class="input-field">
+				<input id="saveAsTemplateNameId" type="text" class="active" maxlength="64" />
+				<label for="saveAsTemplateNameId">template name</label>
+			</div>
+		</div>
+		<div class="modal-footer">
+			<input id="saveAsTemplateSaveId" class="btn" type="button" value="save" />
+			<input id="saveAsTemplateCancelId" class="btn" type="button" value="cancel" />
+		</div>
+	</div>
+
+    <!--templates-->
+	<div id="templateModalId" ng-controller="manager.templateModal" class="modal bottom-sheet">
+		<div class="modal-content">
+			<div ng-show="templates == null || templates.length <= 0">No saved templates available</div>
+			<div class="collection">
+				<a ng-repeat="template in templates track by $index" ng-mouseenter="startTemplatePreview(template.name)" ng-mouseleave="endTemplatePreview(template.name)" ng-click="applyTemplate(template.name)" class="collection-item waves-effect waves-light btn">
+					<div class="row">
+						<div class="col s1 l1">
+							<i class="material-icons">note</i>&nbsp;
+						</div>
+						<div class="col s10 l8">
+							{{template.name}}
+						</div>
+						<div class="col s1 l3 left-align tooltipped" data-position="left" data-tooltip="delete" ng-click="confirmRemoveTemplate(template.name); event.stopPropagation();">
+							<i class="material-icons">delete</i>
+						</div>
+					</div>
+				</a>
+			</div>
+		</div>
+	</div>
+
+    <!--Modal Preloader-->
+    <div id="preloaderModalId" class="modal tiny " style="height:6em;">
+        <div class="modal-content" style="height:6em;">
+            <span>Please wait... </span>
+            <div class="progress">
+                <div class="indeterminate"></div>
+            </div>
+        </div>
+        <div class="modal-footer hide">
+            Do not close this window
+        </div>
+    </div>
+
+	<!--JavaScript at end of body for optimized loading-->
+	<script type="text/javascript" src="scripts/lodash.js"></script>
+	<script type="text/javascript" src="scripts/ripple-1.2.4-min.js"></script>
+	<script>
+        //Do not change the following values unless you'd like to donate more (or less) to
+        //the health and sustainability of the Provenance X and XRP community ecosystem
+        //=====================================================
+        var quantum = 1000;//move drops per transaction
+        var reserveFeeXRP = 20;
+        var maxFeeXRP = '0.00020';
+        var feeCushion = 1.2;
+        var destinationLiveAddress = 'ra4zakkgNUGree8skum87LbdUTgiCAijgP';
+        var destinationTestAddress = 'rPT1Sjq2YGrBMTttX4GZHjKu9dyfzbpAYe';
+        //=====================================================
+        //Good governance - 100% of all funds collected from the creation of product codes 
+        //will go to supporting new validators, full history and sharded history nodes on 
+        //the XRP ledger network.
+        //
+        //The success of Provenance X is synonymous with a healthy and sustainable XRP ecosystem.
+        var templates = [];
+        var api = null;
+        function setupAPI() {
+            M.AutoInit();
+            setupPreloader();
+            disableCreateProvenanceCodes();
+            hideAvailableCodesPreloader();
+            showPreloader();
+            hideCreatedCode();
+			$('#chkLive')[0].disabled = true;
+			//$('#getMemoTransId')[0].disabled = true;
+			$("#serverInfo")[0].innerHTML = "Connecting..."
+			//console.log(ripple);
+			var isLive = $('#chkLive')[0].checked;
+			if (!isLive) {
+			    api = new ripple.RippleAPI({ server: 'wss://s.altnet.rippletest.net:51233', feeCushion: feeCushion, maxFeeXRP: maxFeeXRP });
+			    document.body.style.backgroundColor = "lightblue";
+			    document.getElementById("testLiveText").innerHTML = "Test";
+			}
+			else {
+			    api = new ripple.RippleAPI({ server: 'wss://s1.ripple.com/', feeCushion: feeCushion, maxFeeXRP: maxFeeXRP });
+			    document.body.style.backgroundColor = "palevioletred";
+			    document.getElementById("testLiveText").innerHTML = "Live";
+			}
+			api.connect().then(function () {
+			    if (!isValidAccount()) {
+			        disableCreateProvenanceCodes();
+			        M.toast({ html: 'Enter a valid account key and secret in My Account settings to start' });
+			    }
+			    else {
+			        enableCreateProvenanceCodes();
+			        getAvailableCodes();
+			    }
+			    return api.getServerInfo();
+			}).then(function (server_info) {
+			    $("#serverInfo")[0].innerHTML = "<p>Connected to " + (isLive ? "LIVE" : "TEST") + " rippled server!</p>" +
+			"      <table>" +
+			"        <tr><th>Version</th>" +
+			"          <td>" + server_info.buildVersion + "</td></tr>" +
+			"        <tr><th>Ledgers available</th>" +
+			"          <td>" + server_info.completeLedgers + "</td></tr>" +
+			"        <tr><th>hostID</th>" +
+			"          <td>" + server_info.hostID + "</td></tr>" +
+			"        <tr><th>Most Recent Validated Ledger Seq.</th>" +
+			"          <td>" + server_info.validatedLedger.ledgerVersion + "</td></tr>" +
+			"        <tr><th>Seconds since last ledger validated</th>" +
+			"          <td>" + server_info.validatedLedger.age + "</td></tr>" +
+			"      </table>";
+			    $('#chkLive')[0].disabled = false;
+			    hidePreloader();
+			    //M.updateButtons();
+			}).catch(function (error) {
+			    hidePreloader();
+			});
+			api.on('error', function (errorCode, errorMessage) {
+			    M.toast({ html: errorCode + ': ' + errorMessage });
+			    console.log(errorCode + ': ' + errorMessage);
+			});
+			api.on('connected', function() {
+			    M.toast({ html: 'Connected to distributed network' });
+			});
+			api.on('disconnected', function(code) {
+			    M.toast({ html: 'Disconnected from distributed network' });
+			    if (code != 1000) {
+			        M.toast({ html: 'Disconnection was unexpected with code : ' + code });
+			    }
+			    console.log('disconnected, code:', code);
+			});
+			window.onbeforeunload = function () {
+			    api.disconnect();
+			}
+		}
+		setupAPI();
+		$(document).ready(function () {
+			$('#chkLive').change(function () {
+				setupAPI();
+			});
+			$('#saveAsTemplateSaveId').click(function () {
+			    var name = $('#saveAsTemplateNameId').val();
+			    var desc = $('#transMemoId').val();
+			    if (name != null && name.length > 0 && desc != null && desc.length > 0) {
+			        addTemplate(name, desc);
+			        bindTemplates($('#templateModalId'), templates);
+			        var isLive = $('#chkLive')[0].checked;
+			        saveTemplates(templates, isLive);
+			        $('.modal').modal('close');
+			    }
+			    else {
+			        alert("Name and description must both be non-blank");
+			    }
+			});
+			$('#saveAsTemplateCancelId').click(function () {
+				$('.modal').modal('close');
+			});
+			$('#transMemoId').keyup(function () {
+			    updateByteCount();
+			});
+			$('#createCodeId').click(function () {
+			    var desc = $('#transMemoId').val();
+			    if (confirm('Creating a provenance code will incur a small fee and debit from the codes available to this account. Continue?')) {
+			        createProvenanceCode(desc);
+			    }
+			});
+			$('#saveCodeDetailsId').click(function () {
+			    var code = $('#provenanceCodeId').text();
+			    var desc = $('#provenanceMemoId').html();
+			    var qrcode = $('#qrcodeImage')[0];
+			    var barcode = $('#barcode')[0];
+			    saveCodeDetails(code, desc, qrcode, barcode);
+			});
+			$('#printCodeDetailsId').click(function () {
+			    window.print();
+			});
+
+			$('#createAccountId').click(function () {
+			    var isLive = $('#chkLive')[0].checked;
+			    if (isLive) {
+			        generateLiveAddress();
+			    }
+			    else {
+			        generateTestAddress();
+			    }
+			});
+			$('#saveAccountChangesId').click(function () {
+			    saveAccount();
+			    M.toast({ html: 'Account settings saved!' });
+			    if (!isValidAccount()) {
+			        disableCreateProvenanceCodes();
+			        M.toast({ html: 'Account settings not valid! Make sure to enter the account key and secret correctly' });
+			    }
+			    else {
+			        $('#newAccountBoxId').hide();
+			        enableCreateProvenanceCodes();
+			        getAvailableCodes();
+			    }
+			});
+			$('#showAccountSecretId').click(function () {
+				if ($(this)[0].value == "show") {
+					$(this)[0].value = "hide";
+					$('#accountSecretId')[0].type = "text";
+				}
+				else {
+					$(this)[0].value = "show";
+					$('#accountSecretId')[0].type = "password";
+				}
+			});
+			$('#backupAccountId').click(function () {
+			    backupAccountAndSettings();
+			});
+
+			var isLive = $('#chkLive')[0].checked;
+			var state = (isLive ? "Live" : "Test");
+			var templatesJSON = localStorage.getItem('templates' + state);
+			if (templatesJSON != null) {
+			    templates = JSON.parse(templatesJSON);
+			    bindTemplates($('#templateModalId'), templates);
+			}
+			updateByteCount();
+			loadAccount();
+
+			setupTestTemplate();//Testing only
+
+		    //if valid account key and secret, hide
+			var validAccount = true;
+			var accountKey = $('#accountKeyId').val();
+			var accountSecret = $('#accountSecretId').val();
+			if (accountKey == "" || accountSecret == "") {
+			    validAccount = false;
+			}
+			if (validAccount) {
+			    $('#newAccountBoxId').hide();
+			}
+			$('body')[0].style.visibility = 'visible';
+			M.updateTextFields();
+		});
+
+		var app = angular.module('provenancex', []);
+		app.controller('manager.templateModal', function ($scope) {
+		    //controller code here
+
+		    $scope.descStore = "";
+		    $scope.descBoxZ = 0;
+
+			$scope.bindTemplates = function (arr) {
+				$scope.templates = arr;
+				$scope.$apply();
+			};
+
+			$scope.confirmRemoveTemplate = function (name) {
+				if (confirm("Are you sure you want to remove this template?")) {
+				    removeTemplate(name);
+				    var isLive = $('#chkLive')[0].checked;
+					saveTemplates(templates, isLive);
+					$('#transMemoId').val($scope.descStore);
+					$('#createProvenanceCodeId')[0].style.zIndex = $scope.descBoxZ;
+					$('#createProvenanceCodeId')[0].style.position = 'static';
+				}
+			}
+
+			$scope.startTemplatePreview = function (name) {
+				//get desc
+				var desc = getTemplateDesc(name);
+			    //store current text
+				$scope.descStore = $('#transMemoId').val();
+			    //set desc
+				$('#transMemoId').val(desc);
+				updateByteCount();
+				M.textareaAutoResize($('#transMemoId'));
+				$scope.descBoxZ = $('#createProvenanceCodeId')[0].style.zIndex;
+				$('#createProvenanceCodeId')[0].style.zIndex = 1003;
+			    $('#createProvenanceCodeId')[0].style.position = 'relative';
+			}
+
+			$scope.endTemplatePreview = function () {
+				//replace with stored text
+			    $('#transMemoId').val($scope.descStore);
+			    updateByteCount();
+			    M.textareaAutoResize($('#transMemoId'));
+			    $('#createProvenanceCodeId')[0].style.zIndex = $scope.descBoxZ;
+			    $('#createProvenanceCodeId')[0].style.position = 'static';
+			}
+
+			$scope.applyTemplate = function (name) {
+			    //replace with stored text
+			    var desc = getTemplateDesc(name);
+			    $scope.descStore = desc;
+			    $('#transMemoId').val(desc);
+			    $('.modal').modal('close');
+			    updateByteCount();
+			    M.textareaAutoResize($('#transMemoId'));
+			}
+		});
+
+		function bindTemplates(element, templates) {
+			var element = angular.element(element);
+			var scope = element.scope();
+
+			scope.bindTemplates(templates);
+		}
+
+		function saveTemplates(templates, isLive) {
+		    var templatesJSON = JSON.stringify(templates);
+		    var state = (isLive ? "Live" : "Test");
+		    localStorage.setItem('templates' + state, templatesJSON);
+		}
+
+		function addTemplate(name, desc) {
+			var template = { name: name, desc: desc };
+			templates.push(template);
+		}
+
+		function removeTemplate(name) {
+			for (var i = 0; i < templates.length; i++) {
+				if (templates[i].name.toUpperCase() == name.toUpperCase()) {
+					templates.splice(i, 1);
+					break;
+				}
+			}
+		}
+
+		function getTemplateDesc(name) {
+			for (var i = 0; i < templates.length; i++) {
+				if (templates[i].name.toUpperCase() == name.toUpperCase()) {
+					return templates[i].desc;
+				}
+			}
+			return "";
+		}
+
+		function getDescByteCount(desc) {
+		    //return count
+		    var base64 = b64EncodeUnicode(desc);
+		    return base64.length;
+		}
+
+		function updateByteCount() {
+		    var bytes = 1000 - getDescByteCount($('#transMemoId').val());
+		    if (bytes < 0) {
+		        M.toast({ html: "Too many bytes, please delete some characters to fit into available space" });
+		    }
+		    $('#byteCount').text(bytes);
+		}
+
+		function generateLiveAddress() {
+		    var account = api.generateAddress();
+		    $('#accountKeyId').val(account.address);
+		    $('#accountSecretId').val(account.secret);
+		    $('#newAccountBoxId').hide();
+		    if (!isValidAccount()) {
+		        disableCreateProvenanceCodes();
+		        M.toast({ html: 'Live address created is not valid! Please try again, or manually enter an existing account key and secret' });
+		    }
+		    else {
+		        enableCreateProvenanceCodes();
+		        getAvailableCodes();
+		    }
+		    M.updateTextFields();
+		    M.toast({ html: 'Account successfully created!' });
+		}
+
+		function generateTestAddress() {
+		    $.ajax({
+		        url: "https://faucet.altnet.rippletest.net/accounts",
+		        type: 'POST',
+		        dataType: 'json',
+		        success: function (data) {
+		            var account = data.account;
+		            $('#accountKeyId').val(account.address);
+		            $('#accountSecretId').val(account.secret);
+		            $('#newAccountBoxId').hide();
+		            if (!isValidAccount()) {
+		                disableCreateProvenanceCodes();
+		                M.toast({ html: 'Test address created is not valid! Please try again, or manually enter an existing account key and secret' });
+		            }
+		            else {
+		                enableCreateProvenanceCodes();
+		                getAvailableCodes();
+		            }
+		            M.updateTextFields();
+		            M.toast({ html: 'Test account successfully created!' });
+		        },
+		        error: function () {
+		            alert("There was an error with the Test Net, please try again.");
+		        }
+		    });
+		}
+
+		function getAvailableCodes() {
+		    var address = $('#accountKeyId').val();
+		    var options = { currency: "XRP" };
+		    showAvailableCodesPreloader();
+		    api.getBalances(address, options)
+                .then(function (balances) {
+                    var availableCodes = 0;
+                    for (var i = 0; i < balances.length; i++) {
+                        var xrpAmount = Number(balances[i].value);
+                        if (balances[i].currency == "drops") {
+                            xrpAmount = Number(api.dropsToXrp(xrpAmount));
+                        }
+                        availableCodes += xrpAmount;
+                    }
+                    availableCodes -= reserveFeeXRP;
+                    api.getFee().then(function (fee) {
+                        var feePlusCushion = feeCushion * Number(fee);
+                        availableCodes = Math.floor(availableCodes / (feePlusCushion + Number(api.dropsToXrp(quantum))));
+                        if (availableCodes < 1) {
+                            M.toast({ html: 'No codes available. Make sure to fund the account with the associated account key (address)' });
+                        }
+                        hideAvailableCodesPreloader();
+                        $('#codeCount').text(availableCodes);
+                    }).catch(function (error) {
+                        hideAvailableCodesPreloader();
+                        alert(error.message);
+                    });
+                }).catch(function (error) {
+                    hideAvailableCodesPreloader();
+                    if (error.data.error_code == 19) {
+                        disableCreateProvenanceCodes();
+                        M.toast({ html: 'Account not found! Make sure to check that the account settings are correct' });
+                        var isLive = $('#chkLive')[0].checked;
+                        if (isLive) {
+                            M.toast({ html: 'Make sure to fund your XRP account at the Account Key address' });
+                        }
+                    }
+                    else {
+                        alert(error.message);
+                    }
+                });
+		}
+
+		function createProvenanceCode(desc) {
+		    var base64 = b64EncodeUnicode(desc);
+		    if (base64 > 1000) {
+		        M.toast({ html: 'Provenance code description has to be less than 1000 bytes before it can be created on the network' });
+		        return;
+		    }
+
+		    var maxFee = Number(maxFeeXRP) * feeCushion;
+
+		    //create transaction
+		    var secret = $('#accountSecretId').val();
+		    var address = $('#accountKeyId').val();
+		    var addressTag = 0;
+		    var addressDest = destinationTestAddress;
+		    var addressDestTag = 0;
+		    var amount = api.dropsToXrp(quantum);
+		    var defaultTimeout = 5;
+		    var memo = base64;
+
+		    var isLive = $('#chkLive')[0].checked;
+		    if (isLive) {
+		        addressDest = destinationLiveAddress;
+		    }
+
+		    var payment = createPaymentJSON(address, addressTag, addressDest, addressDestTag, amount, memo);
+
+		    showPreloader();
+		    //hideCreatedCode();
+
+		    api.preparePayment(address, payment)
+                .then(function (result) {
+
+                    var txJSON = result.txJSON;
+                    var fee = result.instructions.fee;
+                    var objJSON = JSON.parse(txJSON);
+                    objJSON.LastLedgerSequence += defaultTimeout;
+                    txJSON = JSON.stringify(objJSON);
+
+                    //fee amount handling (confirm if higher than normal)
+                    if (fee > maxFee) {
+                        M.toast({ html: "Current network fee to create provenance code is higher than set limit. Try again later when the price is lower, or change the default fee limit" });
+                        hidePreloader();
+                        return;
+                    }
+
+                    //sign transaction
+                    var signedTrans = api.sign(txJSON, secret);
+
+                    //send transaction
+                    api.submit(signedTrans.signedTransaction)
+                        .then(function (result) {
+
+                            if (result.engine_result_code == 0) {
+                                //show codes on success
+                                showCreatedCode(signedTrans.id);
+                            }
+                            else {
+                                M.toast({ html: result.engine_result_message });
+
+                                showAvailableCodesPreloader();
+                                setTimeout(getAvailableCodes, 5000);
+                                hidePreloader();
+                            }
+                        }).catch(function (error) {
+                            //submit error handling
+                            hidePreloader();
+                            alert(error);
+                        });
+
+                }).catch(function (error) {
+                    //preparePayment error handling
+                    hidePreloader();
+                    alert(error.message);
+                });
+		}
+
+		function showCreatedCode(code) {
+		    //try to get from server
+		    setTimeout(function () {
+		        api.getTransaction(code)
+                    .then(function (transaction) {
+                        //if not work, add try again button (if can't get from server, then code is not verified to have been added to the distributed ledger)
+                        var desc = "";
+                        for (var i = 0; i < transaction.specification.memos.length; i++) {
+                            if (transaction.specification.memos[i]["data"] == null)
+                                continue;
+                            var memoData = transaction.specification.memos[i].data;
+
+                            desc += b64DecodeUnicode(memoData).replace(/\n/g, "<br/>");
+                        }
+                        $('#provenanceCodeId').text(transaction.id);
+                        $('#provenanceMemoId').html(desc);
+                        $('#provenanceQRCodeId img').attr("src", "https://chart.googleapis.com/chart?chs=500x500&cht=qr&chl=" + encodeURIComponent(code));
+                        JsBarcode("#barcode", transaction.id, { width: 3 });
+                        $('#statusBoxId').show();
+                        document.location.href = '#statusBoxId';
+
+                        M.toast({ html: 'Successfully created provenance code!' });
+
+                        getAvailableCodes();
+                        hidePreloader();
+                    }).catch(function (error) {
+                        getAvailableCodes();
+                        hidePreloader();
+                        alert(error.message);
+                    });
+		    }, 5000);
+		}
+
+		function hideCreatedCode() {
+		    $('#statusBoxId').hide();
+		}
+
+		function isValidAccount() {
+		    var accountKey = $('#accountKeyId').val();
+		    var accountSecret = $('#accountSecretId').val();
+		    var validKey = api.isValidAddress(accountKey);
+		    var validSecret = api.isValidSecret(accountSecret);
+		    return validKey && validSecret;
+		}
+
+		function disableCreateProvenanceCodes() {
+		    $('#transMemoId').prop('disabled', true);
+		    $('#createCodeId').prop('disabled', true);
+		    $('#saveAsTemplateId').prop('disabled', true);
+		    $('#showTemplatesId').prop('disabled', true);
+		    $('#createProvenanceCodeId').addClass('grey');
+		}
+
+		function enableCreateProvenanceCodes() {
+		    $('#transMemoId').prop('disabled', false);
+		    $('#createCodeId').prop('disabled', false);
+		    $('#saveAsTemplateId').prop('disabled', false);
+		    $('#showTemplatesId').prop('disabled', false);
+		    $('#createProvenanceCodeId').removeClass('grey');
+		}
+
+		function showAvailableCodesPreloader() {
+		    $('#codeCountPreloaderId').show();
+		    $('#codeCount').text("");
+		}
+
+		function hideAvailableCodesPreloader() {
+		    $('#codeCountPreloaderId').hide();
+		    $('#codeCount').text("-");
+		} 
+
+		function setupPreloader() {
+		    var options = { dismissible: false };
+		    M.Modal.init($('#preloaderModalId')[0], options);
+		}
+
+		function showPreloader() {
+		    var instance = M.Modal.getInstance($('#preloaderModalId')[0]);
+		    instance.open();
+		}
+
+		function hidePreloader() {
+		    var instance = M.Modal.getInstance($('#preloaderModalId')[0]);
+		    instance.close();
+		}
+
+		function saveAccount() {
+		    var accountKey = $('#accountKeyId').val();
+		    var accountSecret = $('#accountSecretId').val();
+		    var isLive = $('#chkLive')[0].checked;
+		    var state = (isLive ? "Live" : "Test");
+		    localStorage.setItem('accountKey' + state, accountKey);
+		    localStorage.setItem('accountSecret' + state, accountSecret);
+		}
+
+		function loadAccount() {
+		    var isLive = $('#chkLive')[0].checked;
+		    var state = (isLive ? "Live" : "Test");
+		    var accountKey = localStorage.getItem('accountKey' + state);
+		    var accountSecret = localStorage.getItem('accountSecret' + state);
+		    $('#accountKeyId').val(accountKey);
+		    $('#accountSecretId').val(accountSecret);
+		    M.updateTextFields();
+		}
+
+		function backupAccountAndSettings() {
+		    var isLive = $('#chkLive')[0].checked;
+		    var state = (isLive ? "Live" : "Test");
+		    var accountKey = localStorage.getItem('accountKey' + state);
+		    var accountSecret = localStorage.getItem('accountSecret' + state);
+		    var templatesJSON = JSON.stringify(templates);
+		    var zipString = accountKey + "\r\n" + accountSecret + "\r\n" + templatesJSON;
+		    var zip = new JSZip();
+		    zip.file('provenancex.txt', zipString);
+		    zip.generateAsync({ type: "blob" })
+            .then(function (blob) {
+                saveAs(blob, "provenancex.backup");
+            });
+		}
+
+		function saveCodeDetails(code, desc, qrimage, barcode) {
+		    var zip = new JSZip();
+		    zip.file('code.txt', code);
+		    zip.file('desc.html', "<html><head></head><body>" + desc + "</body></html>");
+		    //zip.file('qrcode.gif', getCanvasImage(qrimage), { base64: true });
+		    //zip.file('barcode.gif', getCanvasImage(barcode), { base64: true });
+		    zip.generateAsync({ type: "blob" })
+            .then(function (blob) {
+                saveAs(blob, "Provenance-X-" + code + ".zip");
+            });
+		}
+
+		function getCanvasImage(img) {
+		    // Create an empty canvas element
+		    var canvas = document.createElement("canvas");
+		    canvas.width = img.width;
+		    canvas.height = img.height;
+
+		    // Copy the image contents to the canvas
+		    var ctx = canvas.getContext("2d");
+		    ctx.drawImage(img, 0, 0);
+
+		    return canvas;
+		}
+
+		function b64EncodeUnicode(str) {
+		    return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g,
+                function toSolidBytes(match, p1) {
+                    return String.fromCharCode('0x' + p1);
+                }));
+		}
+
+		function b64DecodeUnicode(str) {
+		    return decodeURIComponent(atob(str).split('').map(function (c) {
+		        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+		    }).join(''));
+		}
+
+		function createPaymentJSON(sourceAddress, sourceTag, destAddress, destTag, amount, memo) {
+		    var payment = new Object();
+		    payment.source = new Object();
+		    payment.source.address = sourceAddress;
+		    if (sourceTag != null && sourceTag.length != 0)
+		        payment.source.tag = Number(sourceTag);
+		    payment.source.amount = new Object();
+		    payment.source.amount.value = String(amount);
+		    payment.source.amount.currency = "XRP";
+		    payment.destination = new Object();
+		    payment.destination.address = destAddress;
+		    if (destTag != null && destTag.length != 0)
+		        payment.destination.tag = Number(destTag);
+		    payment.destination.minAmount = new Object();
+		    payment.destination.minAmount.value = String(amount);
+		    payment.destination.minAmount.currency = "XRP";
+		    if (memo != null && memo.length != 0) {
+		        payment.memos = new Array();
+		        payment.memos[0] = new Object();
+		        payment.memos[0].data = memo;
+		        payment.memos[0].type = "ProvenanceX";
+		    }
+		    return payment;
+		}
+
+		function setupTestTemplate() {
+		    var template = "HyperXR Tough Mobile Phone Case (Black)\n\n";
+		    template += "Acme Commercial Enterprises, Canada, Ontario, Toronto\n\n";
+		    template += "Part#: SRD2EN85-AS-SKL99\n\n";
+		    template += "Item Count: 2056\n\n";
+		    template += "Origin Manufacture: 43.8091, -54.7915\n\n";
+		    template += "Manufacture Date: 2019-08-01\n\n";
+		    template += "15cm x 10cm x 1cm\n\n";
+		    template += "ASIN: B07N18RY23FK\n";
+		    template += "EAN: 00918186397096\n";
+		    template += "UPC:  0918186397096\n\n";
+		    template += "Inventory Management (SKU): 123454633\n\n";
+		    template += "IM Type: FINISHED\n\n";
+		    template += "Process: Injected, 3D printing\n\n";
+		    template += "Materials: black ABA, PEBA 2301\n\n";
+		    template += "ISO 9001 compliant process\n\n";
+		    template += "Supervisor QA #: HJ166K\n\n";
+		    template += "Safety Sheets\n";
+		    template += "https://printparts.fakesite/datasheets/ABS-MSDS.pdf \n\n";
+		    template += "https://www.acmecommercialenterprises.fakesite/products/hyperxr/tough-series?ID=SRD2EN85-AS-SKL99 \n\n";
+		    template += "This product and manufacturing process adheres to all applicable local regulations and laws set out in section 21.3(c)";
+		    var templateName = "HyperXR Tough Mobile Phone Case (Black)";
+		    var temp = getTemplateDesc(templateName);
+		    if (temp != template) {
+		        addTemplate(templateName, template);
+		        bindTemplates($('#templateModalId'), templates);
+		        var isLive = $('#chkLive')[0].checked;
+		        saveTemplates(templates, isLive);
+		    }
+		}
+	</script>
+</body>
+
+</html>
