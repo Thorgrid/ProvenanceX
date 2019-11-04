@@ -450,7 +450,9 @@
 			updateByteCount();
 			loadAccount();
 
-			setupTestTemplate();//Testing only
+			if (!isLive) {
+			    setupTestTemplate();//Testing only
+			}
 
 		    //if valid account key and secret, hide
 			var validAccount = true;
