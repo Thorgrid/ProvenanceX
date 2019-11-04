@@ -53,6 +53,14 @@
                 font-size:1em;
             }
         }
+        @media screen and (max-width: 600px) {
+            #logoTitle {
+                font-size:2.5em;
+            }
+            #logoTagline {
+                font-size:2em;
+            }
+        }
 	</style>
 	<!--Import Google Icon Font-->
 	<link href="fonts/material-icons.css" rel="stylesheet">
@@ -87,15 +95,15 @@
 	<div id="titlebar" class="container">
 		<div class="card-panel">
 			<div class="company large-text">
-				<div class="row valign-wrapper">
+				<div class="row">
 					<div class="col s3 l2">
                         <a href="provenance-x.html">
                             <img id="logoImage" src="images/ProvenanceXLogo.png" alt="" class="responsive-img" />
                         </a>
                     </div>
-					<div class="col s9 s10">
-						<h1 style="margin-bottom:0;">Provenance X</h1><br />
-						<h3 style="margin-top:0;">Online Manager (<span id="testLiveText">Test</span> Network)</h3>
+					<div class="col s9 l10">
+                        <h1 id="logoTitle" style="margin-bottom:0;">Provenance X</h1><br />
+                        <h3 id="logoTagline" style="margin-top:0;">Online Manager (<span id="testLiveText">Test</span> Network)</h3>
 					</div>
 				</div>
 			</div>
@@ -164,6 +172,7 @@
                 <div class="col s12 l6">
                     <h4>QR Code</h4>
                     <div id="provenanceQRCodeId"><img id="qrcodeImage" class="responsive-img materialboxed" style="display:block;margin-left:auto;margin-right:auto;width:50%;" width="250" height="250" /></div>
+                    <div>(Best practice would be to include a url to the online reader on any packaging - ie. <b>https://www.provenancex.net/reader</b> or your own branded url)</div>
                     <h4>CODE128 Barcode</h4>
                     <div id="provenanceBarcodeId"><img id="barcode" class="responsive-img materialboxed" style="width:100%;height:100%;page-break-inside:avoid" /></div>
                 </div>
@@ -592,31 +601,39 @@
 		    }
 		    M.updateTextFields();
 		    M.toast({ html: 'Account successfully created!' });
+		    M.toast({ html: 'Make sure to save your account settings' });
 		}
 
 		function generateTestAddress() {
+		    showPreloader();
 		    $.ajax({
 		        url: "https://faucet.altnet.rippletest.net/accounts",
 		        type: 'POST',
 		        dataType: 'json',
 		        success: function (data) {
-		            var account = data.account;
-		            $('#accountKeyId').val(account.address);
-		            $('#accountSecretId').val(account.secret);
-		            $('#newAccountBoxId').hide();
-		            if (!isValidAccount()) {
-		                disableCreateProvenanceCodes();
-		                M.toast({ html: 'Test address created is not valid! Please try again, or manually enter an existing account key and secret' });
-		            }
-		            else {
-		                enableCreateProvenanceCodes();
-		                getAvailableCodes();
-		            }
-		            M.updateTextFields();
-		            M.toast({ html: 'Test account successfully created!' });
+		            setTimeout(function () {
+		                var account = data.account;
+		                $('#accountKeyId').val(account.address);
+		                $('#accountSecretId').val(account.secret);
+		                $('#newAccountBoxId').hide();
+		            
+		                if (!isValidAccount()) {
+		                    disableCreateProvenanceCodes();
+		                    M.toast({ html: 'Test address created is not valid! Please try again, or manually enter an existing account key and secret' });
+		                }
+		                else {
+		                    enableCreateProvenanceCodes();
+		                    getAvailableCodes();
+		                    M.toast({ html: 'Test account successfully created!' });
+		                    M.toast({ html: 'Make sure to save your account settings' });
+		                }
+		                M.updateTextFields();
+		                hidePreloader();
+		            }, 5000);
 		        },
 		        error: function () {
 		            alert("There was an error with the Test Net, please try again.");
+		            hidePreloader();
 		        }
 		    });
 		}
