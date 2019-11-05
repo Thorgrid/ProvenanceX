@@ -138,12 +138,12 @@
             //console.log(ripple);
             var isLive = $('#chkLive')[0].checked;
             if (!isLive) {
-                api = new ripple.RippleAPI({ server: selectServer(historyNodeLevel, isLive), timeout:1000 });
+                api = new ripple.RippleAPI({ server: selectServer(historyNodeLevel, isLive), timeout:3000 });
                 document.body.style.backgroundColor = "lightblue";
                 document.getElementById("testLiveText").innerHTML = "Test";
             }
             else {
-                api = new ripple.RippleAPI({ server: selectServer(historyNodeLevel, isLive), timeout:1000 });//'wss://s1.ripple.com/'
+                api = new ripple.RippleAPI({ server: selectServer(historyNodeLevel, isLive), timeout:3000 });//'wss://s1.ripple.com/'
                 document.body.style.backgroundColor = "palevioletred";
                 document.getElementById("testLiveText").innerHTML = "Live";
             }
@@ -287,13 +287,19 @@
             historyNodes = new Array();
             historyNodes.push([]);
             historyNodes.push([]);
-            $.get('history-nodes.txt', function (data) {
+            var filename = 'history-nodes.txt';
+            if (location.protocol == 'https:') {
+                filename = 'history-nodes-s.txt';
+            }
+            $.get(filename, function (data) {
                 var rows = data.split('\n');
-                for (var i = 0; i < rows.length - 1; i++) {
-                    var columns = rows[i].split('\t');
-                    var index = Number(columns[1]);
-                    var address = columns[0];
-                    historyNodes[index].push(address);
+                for (var i = 0; i < rows.length; i++) {
+                    if (rows[i] != "") {
+                        var columns = rows[i].split('\t');
+                        var index = Number(columns[1]);
+                        var address = columns[0];
+                        historyNodes[index].push(address);
+                    }
                 }
             }).done(function () {
                 setupAPI();
@@ -307,11 +313,17 @@
                 if (isLive) {
                     var length = historyNodes[level].length;
                     var index = Math.trunc(length * Math.random());
-                    console.log("ws://" + historyNodes[level][index] + ":51233");
-                    return 'ws://' + historyNodes[level][index] + ":51233";
+                    console.log("selected " + historyNodes[level][index]);
+                    var protocol = "ws:";
+                    var port = ":51233";
+                    if (location.protocol == 'https:') {
+                        protocol = "wss:";
+                        port = "";
+                    }
+                    return protocol + '//' + historyNodes[level][index] + port;
                 }
                 else {
-                   return 'wss://s.altnet.rippletest.net:51233';
+                    return 'wss://s.altnet.rippletest.net:51233';
                 }
             }
             catch(error) {
