@@ -1,7 +1,7 @@
 var ripple =
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
-/******/ 	var installedModules = {};
+/******/ 	installedModules = {};
 /******/
 /******/ 	// The require function
 /******/ 	function __webpack_require__(moduleId) {
@@ -91,7 +91,6 @@ var connection_1 = __webpack_require__(242);
 exports.Connection = connection_1.default;
 var txflags_1 = __webpack_require__(56);
 exports.txFlags = txflags_1.txFlags;
-
 
 /***/ }),
 /* 1 */

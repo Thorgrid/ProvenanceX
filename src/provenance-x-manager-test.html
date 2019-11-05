@@ -292,6 +292,8 @@
         //The success of Provenance X is synonymous with a healthy and sustainable XRP ecosystem.
         var templates = [];
         var api = null;
+        var historyNodes;
+        var historyNodeLevel = 1;
         function setupAPI() {
             M.AutoInit();
             setupPreloader();
@@ -305,12 +307,12 @@
 			//console.log(ripple);
 			var isLive = $('#chkLive')[0].checked;
 			if (!isLive) {
-			    api = new ripple.RippleAPI({ server: 'wss://s.altnet.rippletest.net:51233', feeCushion: feeCushion, maxFeeXRP: maxFeeXRP });
+			    api = new ripple.RippleAPI({ server: selectServer(historyNodeLevel, isLive), timeout: 1000, feeCushion: feeCushion, maxFeeXRP: maxFeeXRP });
 			    document.body.style.backgroundColor = "lightblue";
 			    document.getElementById("testLiveText").innerHTML = "Test";
 			}
 			else {
-			    api = new ripple.RippleAPI({ server: 'wss://s1.ripple.com/', feeCushion: feeCushion, maxFeeXRP: maxFeeXRP });
+			    api = new ripple.RippleAPI({ server: selectServer(historyNodeLevel, isLive), timeout: 1000, feeCushion: feeCushion, maxFeeXRP: maxFeeXRP });
 			    document.body.style.backgroundColor = "palevioletred";
 			    document.getElementById("testLiveText").innerHTML = "Live";
 			}
@@ -343,6 +345,7 @@
 			    //M.updateButtons();
 			}).catch(function (error) {
 			    hidePreloader();
+			    setupAPI();
 			});
 			api.on('error', function (errorCode, errorMessage) {
 			    M.toast({ html: errorCode + ': ' + errorMessage });
@@ -362,7 +365,7 @@
 			    api.disconnect();
 			}
 		}
-		setupAPI();
+        loadHistoryNodes();
 		$(document).ready(function () {
 			$('#chkLive').change(function () {
 				setupAPI();
@@ -970,6 +973,42 @@
 		        bindTemplates($('#templateModalId'), templates);
 		        var isLive = $('#chkLive')[0].checked;
 		        saveTemplates(templates, isLive);
+		    }
+		}
+
+		function loadHistoryNodes() {
+		    historyNodes = new Array();
+		    historyNodes.push([]);
+		    historyNodes.push([]);
+		    $.get('history-nodes.txt', function (data) {
+		        var rows = data.split('\n');
+		        for (var i = 0; i < rows.length - 1; i++) {
+		            var columns = rows[i].split('\t');
+		            var index = Number(columns[1]);
+		            var address = columns[0];
+		            historyNodes[index].push(address);
+		        }
+		    }).done(function () {
+		        setupAPI();
+		    }).fail(function () {
+		        M.toast({ html: "Failed to connect.  Check history node server list is accessible on the site.  Contact web administrator for assistance." });
+		    });
+		}
+
+		function selectServer(level, isLive) {
+		    try {
+		        if (isLive) {
+		            var length = historyNodes[level].length;
+		            var index = Math.trunc(length * Math.random());
+		            console.log("selected " + historyNodes[level][index]);
+		            return 'ws://' + historyNodes[level][index] + ":51233";
+		        }
+		        else {
+		            return 'wss://s.altnet.rippletest.net:51233';
+		        }
+		    }
+		    catch (error) {
+		        M.toast({ html: "Check history node server list is accessible on the site.  Contact web administrator for assistance." });
 		    }
 		}
 	</script>

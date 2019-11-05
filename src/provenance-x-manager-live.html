@@ -1,123 +1,131 @@
 ﻿<!DOCTYPE html>
 <html>
 <head>
-	<meta charset="utf-8">
-	<title>Provenance X Manager</title>
+    <meta charset="utf-8">
+    <title>Provenance X Manager</title>
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<style type="text/css">
-		td, th {
-			border: 1px solid black;
-			padding: 5px;
-		}
+    <style type="text/css">
+        td, th {
+            border: 1px solid black;
+            padding: 5px;
+        }
 
-		table {
-			border-collapse: collapse;
-		}
-		.btn {
-			margin-top:1em;
-			margin-right:1em;
-		}
+        table {
+            border-collapse: collapse;
+        }
+
+        .btn {
+            margin-top: 1em;
+            margin-right: 1em;
+        }
+
         .modal.small {
-            width:33%;
+            width: 33%;
         }
+
         .modal.tiny {
-            width:22%;
+            width: 22%;
         }
+
         @media (max-width: 50em) {
             .modal.small {
-                width:66%;
+                width: 66%;
             }
+
             .modal.tiny {
-                width:44%;
+                width: 44%;
             }
         }
+
         @media print {
             #serverInfo, #serverCheck, #codesAvailableContainer, #myAccountId,
             #saveAsTemplateModalId, #templateModalId, #createProvenanceCode, #myaccount, #createContainer, #createProvenanceCodeId,
-            #transMemoFieldId, #transMemoId, #saveCodeDetailsId, #printCodeDetailsId, .hiddendiv
-            {
-                display:none;
-                visibility:hidden;
+            #transMemoFieldId, #transMemoId, #saveCodeDetailsId, #printCodeDetailsId, .hiddendiv {
+                display: none;
+                visibility: hidden;
             }
 
             #titlebar {
-                width:50%;
+                width: 50%;
             }
 
             #logoImage {
-                width:50%;
-                height:50%;
+                width: 50%;
+                height: 50%;
             }
 
             #provenanceMemoId {
-                font-size:1em;
+                font-size: 1em;
             }
         }
+
         @media screen and (max-width: 600px) {
             #logoTitle {
-                font-size:2.5em;
+                font-size: 2.5em;
             }
+
             #logoTagline {
-                font-size:2em;
+                font-size: 2em;
             }
         }
-	</style>
-	<!--Import Google Icon Font-->
-	<link href="fonts/material-icons.css" rel="stylesheet">
-	<!--Import materialize.css-->
-	<link type="text/css" rel="stylesheet" href="css/materialize.min.css" media="screen,projection" />
+    </style>
+    <!--Import Google Icon Font-->
+    <link href="fonts/material-icons.css" rel="stylesheet">
+    <!--Import materialize.css-->
+    <link type="text/css" rel="stylesheet" href="css/materialize.min.css" media="screen,projection" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-	<script type="text/javascript" src="scripts/angular.min.js"></script>
-	<script type="text/javascript" src="scripts/jquery-3.3.1.min.js"></script>
-	<script type="text/javascript" src="scripts/materialize.min.js"></script>
+    <script type="text/javascript" src="scripts/angular.min.js"></script>
+    <script type="text/javascript" src="scripts/jquery-3.3.1.min.js"></script>
+    <script type="text/javascript" src="scripts/materialize.min.js"></script>
     <script type="text/javascript" src="scripts/jszip.min.js"></script>
     <script type="text/javascript" src="scripts/FileSaver.min.js"></script>
     <script type="text/javascript" src="scripts/JsBarcode.code128.min.js"></script>
 </head>
 <body ng-app="provenancex" style="visibility:hidden;background-color:palevioletred">
-	<div id="serverInfo" class="card-panel hide-on-med-and-down hide" style="position:fixed;left:3px;top:-1px;max-width:14.5%;z-index:3000;word-wrap:break-word;word-break:break-all;">
+    <div id="serverInfo" class="card-panel hide-on-med-and-down hide" style="position:fixed;left:3px;top:-1px;max-width:14.5%;z-index:3000;word-wrap:break-word;word-break:break-all;">
 
-	</div>
-	<div id="serverCheck" class="container center hide">
-		<div class="card-panel">
-			<div class="switch large-text">
-				<label style="font-size:1.25em">
-					Testing
-					<input id="chkLive" checked type="checkbox" />
-					<span class="lever"></span>
-					Live
-				</label>
-			</div>
-		</div>
-	</div>
+    </div>
+    <div id="serverCheck" class="container center hide">
+        <div class="card-panel">
+            <div class="switch large-text">
+                <label style="font-size:1.25em">
+                    Testing
+                    <input id="chkLive" checked type="checkbox" />
+                    <span class="lever"></span>
+                    Live
+                </label>
+            </div>
+        </div>
+    </div>
 
     <!--logo and title-->
-	<div id="titlebar" class="container">
-		<div class="card-panel">
-			<div class="company large-text">
-				<div class="row">
-					<div class="col s3 l2">
+    <div id="titlebar" class="container">
+        <div class="card-panel">
+            <div class="company large-text">
+                <div class="row">
+                    <div class="col s3 l2">
                         <a href="provenance-x.html">
                             <img id="logoImage" src="images/ProvenanceXLogo.png" alt="" class="responsive-img" />
                         </a>
                     </div>
-					<div class="col s9 l10">
+                    <div class="col s9 l10">
                         <h1 id="logoTitle" style="margin-bottom:0;">Provenance X</h1><br />
                         <h3 id="logoTagline" style="margin-top:0;">Online Manager (<span id="testLiveText">Test</span> Network)</h3>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!--codes available-->
-	<div id="codesAvailableContainer" class="container center">
-		<div class="card-panel">
-			<div class="row">
-				<div class="col s4 l8 right-align" style="font-size:2em;">
-					<div id="codesAvailable"><span id="titleCodeCount">Codes available</span>
+    <div id="codesAvailableContainer" class="container center">
+        <div class="card-panel">
+            <div class="row">
+                <div class="col s4 l8 right-align" style="font-size:2em;">
+                    <div id="codesAvailable">
+                        <span id="titleCodeCount">Codes available</span>
                     </div>
-				</div>
+                </div>
                 <div class="col s6 l3 left-align">
                     <span id="codeCount" style="font-size:2em;">-</span>
                     <div id="codeCountPreloaderId" class="preloader-wrapper small active">
@@ -132,34 +140,34 @@
                         </div>
                     </div>
                 </div>
-				<div class="col s2 l1 left-align">
-					<a class="btn-floating btn-large waves-effect waves-light tooltipped" data-position="left" data-tooltip="settings" href="#myaccount"><i class="material-icons">settings</i>&nbsp;</a>
-				</div>
-			</div>
-		</div>
-	</div>
+                <div class="col s2 l1 left-align">
+                    <a class="btn-floating btn-large waves-effect waves-light tooltipped" data-position="left" data-tooltip="settings" href="#myaccount"><i class="material-icons">settings</i>&nbsp;</a>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!--create code-->
     <div id="createProvenanceCode"></div>
-	<div id="createContainer" class="container center">
-		<div id="createProvenanceCodeId" class="card-panel">
-			<h3>Create Provenance Code</h3>
-			<div id="bytesAvailable" class="right"><span id="titleByteCount" style="margin-right:1em;">Bytes available</span><span id="byteCount">1000</span></div>
-			<div id="transMemoFieldId" class="input-field">
-				<textarea id="transMemoId" type="text" cols="40" rows="8" class="active materialize-textarea" maxlength="1000"></textarea>
-				<label for="transMemoId">Description</label>
-			</div>
-			<div class="left-align">
-				<input id="createCodeId" class="btn" type="button" value="create provenance code" />
-				<button id="saveAsTemplateId" class="btn modal-trigger" data-target="saveAsTemplateModalId">save description as template</button>
-				<button id="showTemplatesId" class="btn modal-trigger" data-target="templateModalId" onclick="document.location.href = '#createProvenanceCode'">show templates</button>
-			</div>
-		</div>
-	</div>
-    
-	<!--status-->
-	<div id="statusBoxId" class="container center">
-		<div class="card-panel">
+    <div id="createContainer" class="container center">
+        <div id="createProvenanceCodeId" class="card-panel">
+            <h3>Create Provenance Code</h3>
+            <div id="bytesAvailable" class="right"><span id="titleByteCount" style="margin-right:1em;">Bytes available</span><span id="byteCount">1000</span></div>
+            <div id="transMemoFieldId" class="input-field">
+                <textarea id="transMemoId" type="text" cols="40" rows="8" class="active materialize-textarea" maxlength="1000"></textarea>
+                <label for="transMemoId">Description</label>
+            </div>
+            <div class="left-align">
+                <input id="createCodeId" class="btn" type="button" value="create provenance code" />
+                <button id="saveAsTemplateId" class="btn modal-trigger" data-target="saveAsTemplateModalId">save description as template</button>
+                <button id="showTemplatesId" class="btn modal-trigger" data-target="templateModalId" onclick="document.location.href = '#createProvenanceCode'">show templates</button>
+            </div>
+        </div>
+    </div>
+
+    <!--status-->
+    <div id="statusBoxId" class="container center">
+        <div class="card-panel">
             <div class="row">
                 <div class="col s12">
                     <h4>Provenance Code #</h4>
@@ -181,82 +189,82 @@
                     <div id="provenanceMemoId" class="left-align" style="word-break:break-all;"></div>
                 </div>
             </div>
-		</div>
-	</div>
+        </div>
+    </div>
 
-	<!--my account-->
-	<div id="myAccountId" class="container center">
-		<div class="card-panel">
-			<h3>My Account</h3>
-			<div id="newAccountBoxId">
-				<input id="createAccountId" class="btn" type="button" value="create new account" />
-				<h4>or enter existing account below</h4>
-			</div>
-			<div class="row" style="margin:0px;" >
-				<div class="col s9 l10">
-					<div class="input-field">
-						<input id="accountKeyId" type="text" class="active" maxlength="64" />
-						<label for="accountKeyId">Account Key</label>
-					</div>
-				</div>
-			</div>
-			<div class="row" style="margin:0px;">
-				<div class="col s9 l10">
-					<div class="input-field">
-						<input id="accountSecretId" type="password" class="active" maxlength="64" />
-						<label for="accountSecretId">Account Secret</label>
+    <!--my account-->
+    <div id="myAccountId" class="container center">
+        <div class="card-panel">
+            <h3>My Account</h3>
+            <div id="newAccountBoxId">
+                <input id="createAccountId" class="btn" type="button" value="create new account" />
+                <h4>or enter existing account below</h4>
+            </div>
+            <div class="row" style="margin:0px;">
+                <div class="col s9 l10">
+                    <div class="input-field">
+                        <input id="accountKeyId" type="text" class="active" maxlength="64" />
+                        <label for="accountKeyId">Account Key</label>
+                    </div>
+                </div>
+            </div>
+            <div class="row" style="margin:0px;">
+                <div class="col s9 l10">
+                    <div class="input-field">
+                        <input id="accountSecretId" type="password" class="active" maxlength="64" />
+                        <label for="accountSecretId">Account Secret</label>
                         <div>(stored on your local computer and should never be shared - make sure to backup your account and settings)</div>
-					</div>
-                    
-				</div>
-				<div class="col s3 l2 left-align">
-					<input id="showAccountSecretId" class="btn" type="button" value="show" />
-				</div>
-			</div>
-			<div class="left-align">
+                    </div>
+
+                </div>
+                <div class="col s3 l2 left-align">
+                    <input id="showAccountSecretId" class="btn" type="button" value="show" />
+                </div>
+            </div>
+            <div class="left-align">
                 <input id="saveAccountChangesId" class="btn" type="button" value="save account changes" />
-				<input id="backupAccountId" class="btn" type="button" value="backup account and settings" />
-			</div>
-		</div>
-	</div>
+                <input id="backupAccountId" class="btn" type="button" value="backup account and settings" />
+            </div>
+        </div>
+    </div>
 
-	<div id="myaccount"></div>
+    <div id="myaccount"></div>
 
-	<!--save as template modal-->
-	<div id="saveAsTemplateModalId" class="modal modal-fixed-footer small" style="height:15em;">
-		<div class="modal-content" style="height:15em;">
-			<div class="input-field">
-				<input id="saveAsTemplateNameId" type="text" class="active" maxlength="64" />
-				<label for="saveAsTemplateNameId">template name</label>
-			</div>
-		</div>
-		<div class="modal-footer">
-			<input id="saveAsTemplateSaveId" class="btn" type="button" value="save" />
-			<input id="saveAsTemplateCancelId" class="btn" type="button" value="cancel" />
-		</div>
-	</div>
+    <!--save as template modal-->
+    <div id="saveAsTemplateModalId" class="modal modal-fixed-footer small" style="height:15em;">
+        <div class="modal-content" style="height:15em;">
+            <div class="input-field">
+                <input id="saveAsTemplateNameId" type="text" class="active" maxlength="64" />
+                <label for="saveAsTemplateNameId">template name</label>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <input id="saveAsTemplateSaveId" class="btn" type="button" value="save" />
+            <input id="saveAsTemplateCancelId" class="btn" type="button" value="cancel" />
+        </div>
+    </div>
 
     <!--templates-->
-	<div id="templateModalId" ng-controller="manager.templateModal" class="modal bottom-sheet">
-		<div class="modal-content">
-			<div ng-show="templates == null || templates.length <= 0">No saved templates available</div>
-			<div class="collection">
-				<a ng-repeat="template in templates track by $index" ng-mouseenter="startTemplatePreview(template.name)" ng-mouseleave="endTemplatePreview(template.name)" ng-click="applyTemplate(template.name)" class="collection-item waves-effect waves-light btn">
-					<div class="row">
-						<div class="col s1 l1">
-							<i class="material-icons">note</i>&nbsp;
-						</div>
-						<div class="col s10 l8">
-							{{template.name}}
-						</div>
-						<div class="col s1 l3 left-align tooltipped" data-position="left" data-tooltip="delete" ng-click="confirmRemoveTemplate(template.name); event.stopPropagation();">
-							<i class="material-icons">delete</i>
-						</div>
-					</div>
-				</a>
-			</div>
-		</div>
-	</div>
+    <div id="templateModalId" ng-controller="manager.templateModal" class="modal bottom-sheet">
+        <div class="modal-content">
+            <div ng-show="templates == null || templates.length <= 0">No saved templates available</div>
+            <div class="collection">
+                <a ng-repeat="template in templates track by $index" ng-mouseenter="startTemplatePreview(template.name)" ng-mouseleave="endTemplatePreview(template.name)" ng-click="applyTemplate(template.name)" class="collection-item waves-effect waves-light btn">
+                    <div class="row">
+                        <div class="col s1 l1">
+                            <i class="material-icons">note</i>&nbsp;
+                        </div>
+                        <div class="col s10 l8">
+                            {{template.name}}
+                        </div>
+                        <div class="col s1 l3 left-align tooltipped" data-position="left" data-tooltip="delete" ng-click="confirmRemoveTemplate(template.name); event.stopPropagation();">
+                            <i class="material-icons">delete</i>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
 
     <!--Modal Preloader-->
     <div id="preloaderModalId" class="modal tiny " style="height:6em;">
@@ -271,10 +279,10 @@
         </div>
     </div>
 
-	<!--JavaScript at end of body for optimized loading-->
-	<script type="text/javascript" src="scripts/lodash.js"></script>
-	<script type="text/javascript" src="scripts/ripple-1.2.4-min.js"></script>
-	<script>
+    <!--JavaScript at end of body for optimized loading-->
+    <script type="text/javascript" src="scripts/lodash.js"></script>
+    <script type="text/javascript" src="scripts/ripple-1.2.4-min.js"></script>
+    <script>
         //Do not change the following values unless you'd like to donate more (or less) to
         //the health and sustainability of the Provenance X and XRP community ecosystem
         //=====================================================
@@ -285,13 +293,15 @@
         var destinationLiveAddress = 'ra4zakkgNUGree8skum87LbdUTgiCAijgP';
         var destinationTestAddress = 'rPT1Sjq2YGrBMTttX4GZHjKu9dyfzbpAYe';
         //=====================================================
-        //Good governance - 100% of all funds collected from the creation of product codes 
-        //will go to supporting new validators, full history and sharded history nodes on 
+        //Good governance - 100% of all funds collected from the creation of product codes
+        //will go to supporting new validators, full history and sharded history nodes on
         //the XRP ledger network.
         //
         //The success of Provenance X is synonymous with a healthy and sustainable XRP ecosystem.
         var templates = [];
         var api = null;
+        var historyNodes;
+        var historyNodeLevel = 1;
         function setupAPI() {
             M.AutoInit();
             setupPreloader();
@@ -305,12 +315,12 @@
 			//console.log(ripple);
 			var isLive = $('#chkLive')[0].checked;
 			if (!isLive) {
-			    api = new ripple.RippleAPI({ server: 'wss://s.altnet.rippletest.net:51233', feeCushion: feeCushion, maxFeeXRP: maxFeeXRP });
+			    api = new ripple.RippleAPI({ server: selectServer(historyNodeLevel, isLive), timeout: 1000, feeCushion: feeCushion, maxFeeXRP: maxFeeXRP });
 			    document.body.style.backgroundColor = "lightblue";
 			    document.getElementById("testLiveText").innerHTML = "Test";
 			}
 			else {
-			    api = new ripple.RippleAPI({ server: 'wss://s1.ripple.com/', feeCushion: feeCushion, maxFeeXRP: maxFeeXRP });
+			    api = new ripple.RippleAPI({ server: selectServer(historyNodeLevel, isLive), timeout: 1000, feeCushion: feeCushion, maxFeeXRP: maxFeeXRP });
 			    document.body.style.backgroundColor = "palevioletred";
 			    document.getElementById("testLiveText").innerHTML = "Live";
 			}
@@ -343,6 +353,7 @@
 			    //M.updateButtons();
 			}).catch(function (error) {
 			    hidePreloader();
+			    setupAPI();
 			});
 			api.on('error', function (errorCode, errorMessage) {
 			    M.toast({ html: errorCode + ': ' + errorMessage });
@@ -362,7 +373,7 @@
 			    api.disconnect();
 			}
 		}
-		setupAPI();
+        loadHistoryNodes();
 		$(document).ready(function () {
 			$('#chkLive').change(function () {
 				setupAPI();
@@ -828,7 +839,7 @@
 		function hideAvailableCodesPreloader() {
 		    $('#codeCountPreloaderId').hide();
 		    $('#codeCount').text("-");
-		} 
+		}
 
 		function setupPreloader() {
 		    var options = { dismissible: false };
@@ -972,7 +983,43 @@
 		        saveTemplates(templates, isLive);
 		    }
 		}
-	</script>
+
+		function loadHistoryNodes() {
+		    historyNodes = new Array();
+		    historyNodes.push([]);
+		    historyNodes.push([]);
+		    $.get('history-nodes.txt', function (data) {
+		        var rows = data.split('\n');
+		        for (var i = 0; i < rows.length - 1; i++) {
+		            var columns = rows[i].split('\t');
+		            var index = Number(columns[1]);
+		            var address = columns[0];
+		            historyNodes[index].push(address);
+		        }
+		    }).done(function () {
+		        setupAPI();
+		    }).fail(function () {
+		        M.toast({ html: "Failed to connect.  Check history node server list is accessible on the site.  Contact web administrator for assistance." });
+		    });
+		}
+
+		function selectServer(level, isLive) {
+		    try {
+		        if (isLive) {
+		            var length = historyNodes[level].length;
+		            var index = Math.trunc(length * Math.random());
+		            console.log("selected " + historyNodes[level][index]);
+		            return 'ws://' + historyNodes[level][index] + ":51233";
+		        }
+		        else {
+		            return 'wss://s.altnet.rippletest.net:51233';
+		        }
+		    }
+		    catch (error) {
+		        M.toast({ html: "Check history node server list is accessible on the site.  Contact web administrator for assistance." });
+		    }
+		}
+    </script>
 </body>
 
 </html>

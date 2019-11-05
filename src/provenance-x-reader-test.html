@@ -125,9 +125,11 @@
 
     <!--JavaScript at end of body for optimized loading-->
     <script type="text/javascript" src="scripts/lodash.js"></script>
-    <script type="text/javascript" src="scripts/ripple-1.2.4-min.js"></script>
+    <script type="text/javascript" src="scripts/ripple-1.2.4.js"></script>
 	<script>
         var api = null;
+        var historyNodes;
+        var historyNodeLevel = 1;
         function setupAPI() {
             M.AutoInit();
             $('#chkLive')[0].disabled = true;
@@ -136,12 +138,12 @@
             //console.log(ripple);
             var isLive = $('#chkLive')[0].checked;
             if (!isLive) {
-                api = new ripple.RippleAPI({ server: 'wss://s.altnet.rippletest.net:51233' });
+                api = new ripple.RippleAPI({ server: selectServer(historyNodeLevel, isLive), timeout:1000 });
                 document.body.style.backgroundColor = "lightblue";
                 document.getElementById("testLiveText").innerHTML = "Test";
             }
             else {
-                api = new ripple.RippleAPI({ server: 'wss://s1.ripple.com/' });
+                api = new ripple.RippleAPI({ server: selectServer(historyNodeLevel, isLive), timeout:1000 });//'wss://s1.ripple.com/'
                 document.body.style.backgroundColor = "palevioletred";
                 document.getElementById("testLiveText").innerHTML = "Live";
             }
@@ -163,6 +165,8 @@
             "      </table>";
                 $('#chkLive')[0].disabled = false;
                 $('#getMemoTransId')[0].disabled = false;
+            }).catch(function () {
+                setupAPI();
             });
             api.on('error', function(errorCode, errorMessage) {
                 M.toast({ html: errorCode + ': ' + errorMessage });
@@ -182,7 +186,7 @@
                 api.disconnect();
             }
         }
-        setupAPI();
+        loadHistoryNodes();
         $(document).ready(function () {
         	$('#chkLive').change(function () {
         		setupAPI();
@@ -191,17 +195,19 @@
         	    var transMemo = $('#transMemoId')[0].value;
         	    api.getTransaction(transMemo)
                     .then(function (transaction) {
-                        //$('#messageGetMemo')[0].innerHTML = "<br/>";
-                        //$('#messageGetMemo')[0].innerHTML += JSON.stringify(transaction);
+                        if (transaction.id != transMemo) {
+                            M.toast({ html: "Incorrect provenance id received. Refresh browser to connect to different server." });
+                            return;
+                        }
+
                         var messageData = $('#messageData')[0];
                         messageData.innerHTML = "";
-                        if (transaction.specification["memos"] != null) {
+                        if (transaction != null && transaction.specification != null && transaction.specification["memos"] != null) {
                             for (var i = 0; i < transaction.specification.memos.length; i++) {
                                 if (transaction.specification.memos[i]["data"] == null)
                                     continue;
                                 var memoData = transaction.specification.memos[i].data;
                                 var memoType = transaction.specification.memos[i].type;
-                                alert(memoType);
                                 //if (memoData.indexOf("provenancex:") != 0)
                                 //	continue;
 
@@ -211,8 +217,8 @@
                             JsBarcode("#barcode", transaction.id, { width: 3 });
                             $('#messageDataId').show();
                         }
-                        if (messageData.innerHTML == "") {
-                            messageData.innerHTML = "No provenance data for the code # submitted";
+                        if (transaction == null || transaction.specification == null || transaction.specification["memos"] == null || messageData.innerHTML == "") {
+                            M.toast({ html: "No provenance data for the code # submitted" });
                         }
                         messageData.style.display = "block";
                     }).catch(function (error) {
@@ -275,6 +281,42 @@
             ctx.drawImage(img, 0, 0);
 
             return canvas;
+        }
+
+        function loadHistoryNodes() {
+            historyNodes = new Array();
+            historyNodes.push([]);
+            historyNodes.push([]);
+            $.get('history-nodes.txt', function (data) {
+                var rows = data.split('\n');
+                for (var i = 0; i < rows.length - 1; i++) {
+                    var columns = rows[i].split('\t');
+                    var index = Number(columns[1]);
+                    var address = columns[0];
+                    historyNodes[index].push(address);
+                }
+            }).done(function () {
+                setupAPI();
+            }).fail(function () {
+                M.toast({ html: "Failed to connect.  Check history node server list is accessible on the site.  Contact web administrator for assistance." });
+            });
+        }
+
+        function selectServer(level, isLive) {
+            try {
+                if (isLive) {
+                    var length = historyNodes[level].length;
+                    var index = Math.trunc(length * Math.random());
+                    console.log("ws://" + historyNodes[level][index] + ":51233");
+                    return 'ws://' + historyNodes[level][index] + ":51233";
+                }
+                else {
+                   return 'wss://s.altnet.rippletest.net:51233';
+                }
+            }
+            catch(error) {
+                M.toast({ html: "Check history node server list is accessible on the site.  Contact web administrator for assistance." });
+            }
         }
 	</script>
 	<script type="text/javascript">
