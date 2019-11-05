@@ -760,13 +760,13 @@
                         }).catch(function (error) {
                             //submit error handling
                             hidePreloader();
-                            alert(error);
+                            alert("submit : " + error);
                         });
 
                 }).catch(function (error) {
                     //preparePayment error handling
                     hidePreloader();
-                    alert(error.message);
+                    alert("prepare : " + error.message);
                 });
 		}
 
@@ -798,9 +798,9 @@
                     }).catch(function (error) {
                         getAvailableCodes();
                         hidePreloader();
-                        alert(error.message);
+                        alert("transaction : " + error.message);
                     });
-		    }, 5000);
+		    }, 10000);
 		}
 
 		function hideCreatedCode() {
