@@ -773,14 +773,31 @@
 		function showCreatedCode(code) {
 		    //try to get from server
 		    setTimeout(function () {
-		        api.getTransaction(code)
+		        api.getTransaction(code, { includeRawTransaction: true })
                     .then(function (transaction) {
+                        var rawJSON = JSON.parse(transaction.rawTransaction);
+                        if (transaction.id != code || rawJSON.hash != code) {
+                            M.toast({ html: "Warning: Mismatching provenance id received. Before use, test code # in provenance reader to make sure the details are correct." });
+                        }
+
+                        var keypairs = installedModules[23].exports;
+                        var binaryCodec = installedModules[25].exports;
+
+                        var signingData = binaryCodec.encodeForSigning(rawJSON);
+
+                        if (!keypairs.verify(signingData, rawJSON.TxnSignature, rawJSON.SigningPubKey)) {
+                            M.toast({ html: "Warning: Potential issue found. Before use, test code # in provenance reader to make sure the details are correct." });
+                        }
+
                         //if not work, add try again button (if can't get from server, then code is not verified to have been added to the distributed ledger)
                         var desc = "";
-                        for (var i = 0; i < transaction.specification.memos.length; i++) {
-                            if (transaction.specification.memos[i]["data"] == null)
+                        for (var i = 0; i < rawJSON.Memos.length; i++) {
+                            if (rawJSON.Memos[i] == null || rawJSON.Memos[i].Memo == null || rawJSON.Memos[i].Memo.MemoData == null)
                                 continue;
-                            var memoData = transaction.specification.memos[i].data;
+                            var memoData = rawJSON.Memos[i].Memo.MemoData;
+
+                            memoData = hexToBase64(memoData);
+                            memoData = atob(memoData);
 
                             desc += b64DecodeUnicode(memoData).replace(/\n/g, "<br/>");
                         }
@@ -926,6 +943,12 @@
 		    return decodeURIComponent(atob(str).split('').map(function (c) {
 		        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
 		    }).join(''));
+		}
+
+		function hexToBase64(hexstring) {
+		    return btoa(hexstring.match(/\w{2}/g).map(function (a) {
+		        return String.fromCharCode(parseInt(a, 16));
+		    }).join(""));
 		}
 
 		function createPaymentJSON(sourceAddress, sourceTag, destAddress, destTag, amount, memo) {

@@ -125,7 +125,7 @@
 
     <!--JavaScript at end of body for optimized loading-->
     <script type="text/javascript" src="scripts/lodash.js"></script>
-    <script type="text/javascript" src="scripts/ripple-1.2.4.js"></script>
+    <script type="text/javascript" src="scripts/ripple-1.2.4-min.js"></script>
 	<script>
         var api = null;
         var historyNodes;
@@ -193,23 +193,37 @@
         	});
         	$('#getMemoTransId').click(function () {
         	    var transMemo = $('#transMemoId')[0].value;
-        	    api.getTransaction(transMemo)
+        	    api.getTransaction(transMemo, { includeRawTransaction : true })
                     .then(function (transaction) {
-                        if (transaction.id != transMemo) {
-                            M.toast({ html: "Incorrect provenance id received. Refresh browser to connect to different server." });
+                        var rawJSON = JSON.parse(transaction.rawTransaction);
+                        if (transaction.id != transMemo || rawJSON.hash != transMemo) {
+                            M.toast({ html: "Mismatching provenance id received. Refresh browser to connect to different server." });
+                            return;
+                        }
+
+                        var keypairs = installedModules[23].exports;
+                        var binaryCodec = installedModules[25].exports;
+
+                        var signingData = binaryCodec.encodeForSigning(rawJSON);
+
+                        if (!keypairs.verify(signingData, rawJSON.TxnSignature, rawJSON.SigningPubKey)) {
+                            M.toast({ html: "Incorrect provenance information received. Refresh browser to connect to different server." });
                             return;
                         }
 
                         var messageData = $('#messageData')[0];
                         messageData.innerHTML = "";
-                        if (transaction != null && transaction.specification != null && transaction.specification["memos"] != null) {
-                            for (var i = 0; i < transaction.specification.memos.length; i++) {
-                                if (transaction.specification.memos[i]["data"] == null)
+                        if (rawJSON != null && rawJSON.Memos != null) {
+                            for (var i = 0; i < rawJSON.Memos.length; i++) {
+                                if (rawJSON.Memos[i] == null || rawJSON.Memos[i].Memo == null || rawJSON.Memos[i].Memo.MemoData == null)
                                     continue;
-                                var memoData = transaction.specification.memos[i].data;
-                                var memoType = transaction.specification.memos[i].type;
+                                var memoData = rawJSON.Memos[i].Memo.MemoData;
+                                var memoType = rawJSON.Memos[i].Memo.MemoType;
                                 //if (memoData.indexOf("provenancex:") != 0)
                                 //	continue;
+
+                                memoData = hexToBase64(memoData);
+                                memoData = atob(memoData);
 
                                 messageData.innerHTML += b64DecodeUnicode(memoData).replace(/\n/g, "<br/>");
                             }
@@ -217,7 +231,7 @@
                             JsBarcode("#barcode", transaction.id, { width: 3 });
                             $('#messageDataId').show();
                         }
-                        if (transaction == null || transaction.specification == null || transaction.specification["memos"] == null || messageData.innerHTML == "") {
+                        if (transaction == null || rawJSON.Memos == null || messageData.innerHTML == "") {
                             M.toast({ html: "No provenance data for the code # submitted" });
                         }
                         messageData.style.display = "block";
@@ -393,6 +407,12 @@
 		    return decodeURIComponent(atob(str).split('').map(function (c) {
 		        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
 		    }).join(''));
+		}
+
+		function hexToBase64(hexstring) {
+		    return btoa(hexstring.match(/\w{2}/g).map(function (a) {
+		        return String.fromCharCode(parseInt(a, 16));
+		    }).join(""));
 		}
 	</script> 
 </body>
